@@ -1,8 +1,3 @@
-#include <BasicStepperDriver.h>
-#include <DRV8825.h>
-#include <MultiDriver.h>
-#include <SyncDriver.h>
-
 #include <ros.h>
 #include <AccelStepper.h>
 #include <Encoder.h>
@@ -28,11 +23,10 @@
 #define stepperSpeed 300
 #define steppperMaxPos 1000
 
+//REDEFINE THE VALUES BELOW FOR SETUP!
 #define cachePos1 0
 #define cachePos2 100
-#define cachePos3 400
-#define drillPos 250
-
+#define sensorPos1 400
 #define cacheActuatorPos 100
 
 
@@ -42,6 +36,7 @@
 bool isDrillSpinning = false;
 bool isActuatorMoving = false;
 bool isCalibrating = false;
+bool actuatorState = false; //Relative Move:False, Absolute Move:True
 
 int curStepperLocation; // Cache #1 = -1, Center = 0, Cache #2 = 1, Sensor #1 = 2
 int oldStepperPos = 0;
@@ -83,6 +78,14 @@ void msgCallback (const rover::redCmd& msg){
 
   //Actuator Stuff
   requestedActuatorSpeed = msg.actuatorSpeed
+  
+  if (requestedActuatorSpeed == 300){ 
+    actuatorState = true; //Absolute Move
+    requestedActuatorPos = cacheActuatorPos;
+    requestedActuatorSpeed = 0;
+  }else{
+    actuatorState = false; //Relative Move
+  }
 
   //STEPPER STUFF
   requestedStepperPos = msg.stepperPos;
@@ -101,8 +104,8 @@ Encoder myEnc(encoderPin1, encoderPin2);
 //////////////////////////////// SETUP /////////////////////////////////////////
 void setup() {
 
-  //nh.initNode();
-  //nh.subscribe(red_sub); //?????
+  nh.initNode();
+  nh.subscribe(red_sub);
 
   Serial.begin(57600);
 
@@ -246,37 +249,37 @@ void moveActuatorAbs(int pos) {
 
 void actuatorRun(){
 
-  int difference = requestedActuatorPos - curActuatorPos;
-  int spdV = 0;
-  int howClose = 10; //If it has trouble going to 
+  if (actuatorState == false){
+    moveActuatorRel();
+  }else{
 
-  while(difference != 0){
+    int difference = requestedActuatorPos - curActuatorPos;
+    int spdV = 100; // Change how fast the actuator Moves
+    int howClose = 10; //If it has trouble going to 
 
-     long curActuatorPos = myEnc.read();
-     if (curActuatorPos != oldActuatorPos) {
-        oldActuatorPos = curActuatorPos;
-        //Serial.println(curActuatorPos);
-      }   
-  
-    if (difference > howClose) { //Drill is Higher than requested pos
-      
-      moveActuatorRel(100);
+    //spdV = div(difference,2); // RATE TEST value for 500 length of actuator
     
-    } else if (difference < howClose) { //Encoder is higher than cache, Move up
+    if(difference != 0){
+    
+      if (difference > howClose) { //Drill is Lower than requested pos, Move Up
+        requestedActuatorSpeed = spdV;
+        moveActuatorRel();
       
-      moveActuatorRel(-100);
-  
-    } else {
-      //Set Motor OFF
-      moveActuatorRel(0);
-    }
-
-   delay(100);
+      } else if (difference < howClose) { //Encoder is Higher than requested Pos, Move Down
+        
+        requestedActuatorSpeed = -spdV;
+        moveActuatorRel();
+    
+      } else {
+        //Set Motor OFF
+        requestedActuatorSpeed = 0;
+        moveActuatorRel();
+      }
+   }
   }
-  
 }
 
-void moveActuatorRel(int spd) {
+void moveActuatorRel() {
 
   if (requestedActuatorSpeed != curActuatorSpeed){
 
