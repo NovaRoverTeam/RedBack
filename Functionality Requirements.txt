@@ -1,0 +1,29 @@
+Actuator
+-PID controlled
+-manual operation *
+-encoder reading *
+-Calibration time based
+-Speed of movement *
+-
+
+
+
+Stepper
+-Calibration Endstop|Switch Based?*
+-Positions*
+	-Caches
+	-Drilling
+
+
+
+Drill
+-Speed Control *
+
+
+
+Global
+-Drill status
+	-Drilling*
+	-Cache
+	-No Drill
+-Emergency Killswitch*
