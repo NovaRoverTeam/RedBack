@@ -9,7 +9,7 @@ Actuator
 
 
 Stepper
--Calibration Endstop|Switch Based?*
+-Calibration Endstop*
 -Positions*
 	-Caches
 	-Drilling
