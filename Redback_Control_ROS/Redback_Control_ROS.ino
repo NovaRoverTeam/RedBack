@@ -131,7 +131,7 @@ void setup() {
 //////////////////////////////////// Main Software Loop /////////////////////////////////////
 void loop() {
 
-  if(isCalibrating){
+  /*if(isCalibrating){
     endstopState = digitalRead(stepperEndstopPin);
     
     // check if the stepper endstop is reached
@@ -143,7 +143,7 @@ void loop() {
     } else {
       Serial.println("Stepper Calibrating");
     }
-  }
+  }*/
 
   //Update Encoder position as the current actuator pos
   long curActuatorPos = myEnc.read();
@@ -318,7 +318,8 @@ void calibrateSystem() {
   delay(5000); //Make sure actuator reaches top endstop
   curActuatorPos = 0;
 
-  stepper.move(-500)
+  //stepper.move(-500)
+  stepper.setCurrentPosition(0);
   //Main loop will let motor run till the sensor is reached
 
 
