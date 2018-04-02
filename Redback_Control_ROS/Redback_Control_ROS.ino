@@ -314,7 +314,8 @@ void calibrateSystem() {
   
   isCalibrating = true;
 
-  moveActuatorRel(-255); //Full Speed up
+  requestedActuatorSpeed = -255;
+  moveActuatorRel(); //Full Speed up
   delay(5000); //Make sure actuator reaches top endstop
   curActuatorPos = 0;
 
