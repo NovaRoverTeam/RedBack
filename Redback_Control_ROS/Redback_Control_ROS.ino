@@ -18,16 +18,12 @@
 #define actuatorDirPin 9
 #define actuatorPWMPin 10
 
-#define stepperEndstopPin 11
+//#define stepperEndstopPin 11 Unnecessary
 
 #define stepperSpeed 300
 #define steppperMaxPos 1000
 
-//REDEFINE THE VALUES BELOW FOR SETUP!
-#define cachePos1 0
-#define cachePos2 100
-#define sensorPos1 400
-#define cacheActuatorPos 100
+
 
 
 
@@ -49,7 +45,7 @@ int curDrillSpeed = 0;
 
 int requestedActuatorPos;
 int requestedActuatorSpeed;
-int requestedStepperPos;
+int requestedStepperCmd;
 int requestedDrillSpeed;
 
 ////////////////////////////// ROS CALLBACK ////////////////////////////////////////
@@ -89,7 +85,7 @@ int requestedDrillSpeed;
   }
 
   //STEPPER STUFF
-  requestedStepperPos = msg.stepperPos;
+  requestedStepperCmd = msg.stepperPos;
 
 
 
@@ -114,8 +110,6 @@ void setup() {
   pinMode(drillPWMPin, OUTPUT);
   pinMode(actuatorDirPin, OUTPUT);
   pinMode(actuatorPWMPin, OUTPUT);
-  pinMode(stepperEndstopPin, INPUT);
-  
 
   stepper.setEnablePin(13);
   stepper.enableOutputs();
@@ -159,7 +153,6 @@ void loop() {
   stepperRun();
   stepper.run();
 
-  //temporaryDrilling();
   
 }
 
@@ -171,38 +164,10 @@ void loop() {
 void stepperRun(){
  
 
-  if (requestedStepperPos != stepper.currentPosition()){
+  if (requestedStepperCmd != stepper.currentPosition()){
     if(!isActuatorMoving){ //Only move Sidesways if actuator isnt moving
-    
-      //Cache #1
-      if(requestedStepperPos == -1){
-        if(curActuatorPos > cacheActuatorPos){ //CHECK ENCODER VALUE +ve  OR -VE
-          stepper.moveTo(cachePos1);
-        }  
-      } 
-  
-      //Center Drilling
-      if(requestedStepperPos == 0){
-        if(curActuatorPos > cacheActuatorPos){ //CHECK ENCODER VALUE +ve  OR -VE
-          stepper.moveTo(cachePos2);
-        }  
-      } 
-  
-  
-      //Cache #2
-      if(requestedStepperPos == 1){
-        if(curActuatorPos > cacheActuatorPos){ //CHECK ENCODER VALUE +ve  OR -VE
-          stepper.moveTo(sensorPos1);
-        }  
-      } 
-  
-  
-      //Sensor #1
-      if(requestedStepperPos == 2){
-        if(curActuatorPos > cacheActuatorPos){ //CHECK ENCODER VALUE +ve  OR -VE
-          stepper.moveTo(sensorPos1);
-        }  
-      } 
+
+      stepper.move(requestedStepperCmd*5);
 
     }
   }
@@ -323,7 +288,6 @@ void calibrateSystem() {
   delay(5000); //Make sure actuator reaches top endstop
   curActuatorPos = 0;
 
-  //stepper.move(-500)
   stepper.setCurrentPosition(0);
   //Main loop will let motor run till the sensor is reached
 
@@ -345,34 +309,4 @@ void killAll() {
   
 
 }
-
-/*void temporaryDrilling() {
-  
-    #define drillingSpeed 0 // How fast to Spin Drill
-    #define actuatorInitialPos 200 // Where to start drilling from
-    #define speedOfActuator 100 
-    #define timeToDrill 4000 //In MS
-    #define timeToReturn 5000 // in MS
-
-    moveActuatorAbs(actuatorInitialPos); // THIS NUMBeR IS HOW FAR DOWN IN ENCODER STEPS TO GO DOWN
-
-    setDrillSpeed(drillingSpeed); //Speed of Drill
-    moveActuatorRel(speedOfActuator); // How fast to go down
-    
-    delay(timeToDrill); // How long to drill For
-    
-    setDrillSpeed(-drillingSpeed); // Speed of Return Drill
-    moveActuatorRel(-speedOfActuator); // Speed of going back up again
-    
-    delay(timeToReturn); // How long to go up for
-    
-
-    setDrillSpeed(0); // Stop Motor
-    moveActuatorRel(0); // Stop Motor
-
-    delay(1000000); //Stop indefinitely
-
-
-}
-*/
 
