@@ -1,6 +1,7 @@
 #include <ros.h>
 #include <AccelStepper.h>
 #include <Encoder.h>
+#include <rover/RedCmd.h>
 
 
 ///////////////////////////// Defitions ////////////////////////////////////////
@@ -22,10 +23,6 @@
 
 #define stepperSpeed 300
 #define steppperMaxPos 1000
-
-
-
-
 
 ///////////////////////////// Variables ////////////////////////////////////////
 
@@ -49,25 +46,21 @@ int requestedDrillSpeed;
 ////////////////////////////// ROS CALLBACK ////////////////////////////////////////
 
 // Declare required ROS variables
-//ros::NodeHandle  nh;
+ros::NodeHandle  nh;
 
+void msgCallback (const rover::RedCmd& msg){
 
-// may need to subscribe to "mainframe/arm_cmd_data" instead if this doesn't work
-//ros::Subscriber<rover::redCmd> sub("red_cmd_data", &msgCallback);
-
-
-/*void msgCallback (const rover::redCmd& msg){
-
+  nh.loginfo("Msg received from ROS");
 
   //DRILL STUFF
-  requestedDrillSpeed = msg.drillSpd
+  requestedDrillSpeed = msg.drillSpd;
 
   //Actuator Stuff
-  requestedActuatorSpeed = msg.actuatorSpeed
+  requestedActuatorSpeed = msg.actuatorSpeed;
   
   if (requestedActuatorSpeed == 300){ 
     actuatorState = true; //Absolute Move
-    requestedActuatorPos = cacheActuatorPos;
+    //requestedActuatorPos = cacheActuatorPos;
     requestedActuatorSpeed = 0;
   }else{
     actuatorState = false; //Relative Move
@@ -76,11 +69,11 @@ int requestedDrillSpeed;
   //STEPPER STUFF
   requestedStepperCmd = msg.stepperPos;
 
-
-
 }
 
-*/
+ros::Subscriber<rover::RedCmd> red_sub("red_cmd_data", &msgCallback);
+
+
 //////////////////////////////// Motor Setup /////////////////////////////////////////
 
 AccelStepper stepper(AccelStepper::DRIVER, stepperStepPin, stepperDirPin);
@@ -90,10 +83,13 @@ Encoder myEnc(encoderPin1, encoderPin2);
 //////////////////////////////// SETUP /////////////////////////////////////////
 void setup() {
 
-//  nh.initNode();
-//  nh.subscribe(red_sub);
+  nh.initNode();
+  nh.subscribe(red_sub);
 
-  Serial.begin(57600);
+  nh.loginfo("Calling Setup function.");
+
+
+  ////Serial.begin(57600);
 
   pinMode(drillDirPin, OUTPUT);
   pinMode(drillPWMPin, OUTPUT);
@@ -125,7 +121,7 @@ void loop() {
       stepper.setCurrentPosition(0);
       isCalibrating = false;
     } else {
-      Serial.println("Stepper Calibrating");
+      //Serial.println("Stepper Calibrating");
     }
   }*/
 
@@ -133,7 +129,7 @@ void loop() {
   long curActuatorPos = myEnc.read();
   if (curActuatorPos != oldActuatorPos) {
     oldActuatorPos = curActuatorPos;
-    Serial.println("ActuatorPos: " + curActuatorPos);
+    ////Serial.println("ActuatorPos: " + curActuatorPos);
   }
 
   
@@ -142,7 +138,7 @@ void loop() {
   stepperRun();
   stepper.run();
 
-  
+  nh.spinOnce();
 }
 
 
@@ -157,7 +153,7 @@ void stepperRun(){
     if(!isActuatorMoving){ //Only move Sidesways if actuator isnt moving
 
       stepper.move(requestedStepperCmd*5);
-      Serial.println("Stepper Moving");
+      ////Serial.println("Stepper Moving");
 
     }
   }
@@ -175,7 +171,8 @@ void drillRun() {
       curDrillSpeed = requestedDrillSpeed;
       digitalWrite(drillDirPin, LOW);
       analogWrite(drillPWMPin, requestedDrillSpeed);
-      Serial.print("Drill Spinning");
+      nh.loginfo("Drill spinning.");
+
   
     } else if (requestedDrillSpeed < 0) {
   
@@ -184,14 +181,14 @@ void drillRun() {
       digitalWrite(drillDirPin, HIGH);
       spd = abs(requestedActuatorSpeed);
       analogWrite(drillPWMPin, requestedDrillSpeed);
-      Serial.print("Drill Spinning");
+      nh.loginfo("Drill spinning.");
   
     } else {
   
       isDrillSpinning = false;
       digitalWrite(drillDirPin, LOW);
       analogWrite(drillPWMPin, 0);
-      Serial.print("Drill Stopped");
+      nh.loginfo("Drill stopped.");
     }
     
   }
@@ -248,6 +245,7 @@ void moveActuatorRel() {
     digitalWrite(actuatorDirPin, HIGH);
     analogWrite(actuatorPWMPin, requestedActuatorSpeed);
     curActuatorSpeed = requestedActuatorSpeed;
+    nh.loginfo("Actuator moving.");
 
     } else if (requestedActuatorSpeed < 0) { // Counter Clockwise Rotations
 
@@ -257,6 +255,7 @@ void moveActuatorRel() {
     spd = abs(requestedActuatorSpeed);
     analogWrite(actuatorPWMPin, spd);
     curActuatorSpeed = requestedActuatorSpeed;
+    nh.loginfo("Actuator moving.");
 
     } else { //Not Moving
 
@@ -264,6 +263,7 @@ void moveActuatorRel() {
     digitalWrite(actuatorDirPin, LOW);
     analogWrite(actuatorPWMPin, 0);
     curActuatorSpeed = 0;
+    nh.loginfo("Actuator stopped.");
 
     }
   }
@@ -274,7 +274,7 @@ void calibrateSystem() {
   
   isCalibrating = true;
 
-  requestedActuatorSpeed = -255;
+  //requestedActuatorSpeed = 100; // calibration to set to top
   moveActuatorRel(); //Full Speed up
   delay(5000); //Make sure actuator reaches top endstop
   curActuatorPos = 0;
@@ -300,4 +300,5 @@ void killAll() {
   
 
 }
+
 
