@@ -34,8 +34,6 @@ bool isActuatorMoving = false;
 bool isCalibrating = false;
 bool actuatorState = false; //Relative Move:False, Absolute Move:True
 
-int curStepperLocation; // Cache #1 = -1, Center = 0, Cache #2 = 1, Sensor #1 = 2
-int oldStepperPos = 0;
 
 int curActuatorPos = -999;
 int oldActuatorPos = -999;
@@ -59,15 +57,6 @@ int requestedDrillSpeed;
 
 
 /*void msgCallback (const rover::redCmd& msg){
-
-  int lastActuatorPos = 0;
-  int lastActuatorSpeed = 0;
-  int actuatorSpd = 0;
-
-
-  if (msg.kill == 0){
-    killAll();
-  }
 
 
   //DRILL STUFF
@@ -144,7 +133,7 @@ void loop() {
   long curActuatorPos = myEnc.read();
   if (curActuatorPos != oldActuatorPos) {
     oldActuatorPos = curActuatorPos;
-    //Serial.println(curActuatorPos);
+    Serial.println("ActuatorPos: " + curActuatorPos);
   }
 
   
@@ -168,6 +157,7 @@ void stepperRun(){
     if(!isActuatorMoving){ //Only move Sidesways if actuator isnt moving
 
       stepper.move(requestedStepperCmd*5);
+      Serial.println("Stepper Moving");
 
     }
   }
@@ -185,7 +175,7 @@ void drillRun() {
       curDrillSpeed = requestedDrillSpeed;
       digitalWrite(drillDirPin, LOW);
       analogWrite(drillPWMPin, requestedDrillSpeed);
-      Serial.print("spinning");
+      Serial.print("Drill Spinning");
   
     } else if (requestedDrillSpeed < 0) {
   
@@ -194,13 +184,14 @@ void drillRun() {
       digitalWrite(drillDirPin, HIGH);
       spd = abs(requestedActuatorSpeed);
       analogWrite(drillPWMPin, requestedDrillSpeed);
+      Serial.print("Drill Spinning");
   
     } else {
   
       isDrillSpinning = false;
       digitalWrite(drillDirPin, LOW);
       analogWrite(drillPWMPin, 0);
-  
+      Serial.print("Drill Stopped");
     }
     
   }
