@@ -1,10 +1,8 @@
 #include <ros.h>
 #include <AccelStepper.h>
 #include <Encoder.h>
+#include <rover/RedCmd.h>
 
-#ifdef ROSSTUFF
-  #include <rover/RedCmd.h>
-#endif
 
 
 
@@ -31,7 +29,7 @@
 
 #define cacheActuatorPos 300
 
-//#define ROSSTUFF UNCOMMENT THIS WHEN READY TO COMPILE FULLY
+#define ROSSTUFF
 
 ///////////////////////////// Variables ////////////////////////////////////////
 
@@ -64,7 +62,7 @@ void msgCallback (const rover::RedCmd& msg){
   nh.loginfo("Msg received from ROS");
 
   //KILL SWITCH
-  if (msg.kill = 1){
+  if (msg.kill == 1){
     killAll();
   }
 
@@ -75,7 +73,7 @@ void msgCallback (const rover::RedCmd& msg){
   requestedActuatorSpeed = msg.actuatorSpeed;
 
   //Sensor Stuff
-  requestedSensorSpeed = msg.sensorSpeed;
+  //requestedSensorSpeed = msg.sensorSpeed;
   
   if (requestedActuatorSpeed == 300){ 
     actuatorState = true; //Absolute Move
@@ -160,7 +158,7 @@ void stepperRun(){
   if (requestedStepperCmd != stepper.currentPosition()){
     if(!isActuatorMoving){ //Only move Sidesways if actuator isnt moving
 
-      stepper.move(requestedStepperCmd*5);
+      stepper.move(requestedStepperCmd*25);
       //Serial.println("Stepper Moving");
 
     }
