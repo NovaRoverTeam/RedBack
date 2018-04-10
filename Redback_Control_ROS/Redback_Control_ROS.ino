@@ -1,7 +1,7 @@
 #include <ros.h>
 #include <AccelStepper.h>
 #include <Encoder.h>
-#include <rover/RedCmd.h>
+
 
 
 
@@ -29,7 +29,9 @@
 
 #define cacheActuatorPos 300
 
-#define ROSSTUFF
+#define pwmRangeConstant 20
+
+//#define ROSSTUFF
 
 ///////////////////////////// Variables ////////////////////////////////////////
 
@@ -54,6 +56,8 @@ int requestedSensorSpeed;
 
 ////////////////////////////// ROS CALLBACK ////////////////////////////////////////
 #ifdef ROSSTUFF
+
+#include <rover/RedCmd.h>
 // Declare required ROS variables
 ros::NodeHandle  nh;
 
@@ -73,7 +77,7 @@ void msgCallback (const rover::RedCmd& msg){
   requestedActuatorSpeed = msg.actuatorSpeed;
 
   //Sensor Stuff
-  //requestedSensorSpeed = msg.sensorSpeed;
+  requestedSensorSpeed = msg.sensorSpeed;
   
   if (requestedActuatorSpeed == 300){ 
     actuatorState = true; //Absolute Move
@@ -127,11 +131,16 @@ void setup() {
 
 //////////////////////////////////// Main Software Loop /////////////////////////////////////
 void loop() {
-
+  
+  stepper.runSpeed();
+  
   //Update Encoder position as the current actuator pos
   long curActuatorPos = myEnc.read();
   if (curActuatorPos != oldActuatorPos) {
     oldActuatorPos = curActuatorPos;
+    #ifdef ROSSTUFF
+      nh.loginfo("Drill spinning.");
+    #endif
     //Serial.println("ActuatorPos: " + curActuatorPos);
   }
 
@@ -139,8 +148,11 @@ void loop() {
   drillRun();
   actuatorRun();
   stepperRun();
-  stepper.run();
   sensorRun();
+  
+  stepper.runSpeed();
+  
+
   
   #ifdef ROSSTUFF
     nh.spinOnce();
@@ -158,7 +170,7 @@ void stepperRun(){
   if (requestedStepperCmd != stepper.currentPosition()){
     if(!isActuatorMoving){ //Only move Sidesways if actuator isnt moving
 
-      stepper.move(requestedStepperCmd*25);
+      stepper.move(requestedStepperCmd*5);
       //Serial.println("Stepper Moving");
 
     }
@@ -170,14 +182,14 @@ void stepperRun(){
 void sensorRun(){
 
   int spd;
-  if (requestedSensorSpeed != curSensorSpeed){
-    
+  //if (requestedSensorSpeed != curSensorSpeed){
+  if ((requestedSensorSpeed >= curSensorSpeed + pwmRangeConstant) && (requestedSensorSpeed <= curSensorSpeed - pwmRangeConstant)){
     if (requestedSensorSpeed > 0) { // Clockwise Rotations
   
       curSensorSpeed = requestedSensorSpeed;
       digitalWrite(sensorDirPin, LOW);
       analogWrite(sensorPWMPin, requestedSensorSpeed);
-      //nh.loginfo("Drill spinning.");
+      //nh.loginfo("Sesor spinning.");
 
   
     } else if (requestedSensorSpeed < 0) {
@@ -186,13 +198,13 @@ void sensorRun(){
       digitalWrite(sensorDirPin, HIGH);
       spd = abs(requestedSensorSpeed);
       analogWrite(sensorPWMPin, requestedSensorSpeed);
-      //nh.loginfo("Drill spinning.");
+      //nh.loginfo("Sensor spinning.");
   
     } else {
   
       digitalWrite(sensorDirPin, LOW);
       analogWrite(sensorPWMPin, 0);
-      //nh.loginfo("Drill stopped.");
+      //nh.loginfo("Sensor stopped.");
     }
     
   }
@@ -202,7 +214,8 @@ void sensorRun(){
 
 void drillRun() {
   int spd;
-  if (requestedDrillSpeed != curDrillSpeed){
+  //if (requestedDrillSpeed != curDrillSpeed){
+  if ((requestedDrillSpeed >= curDrillSpeed + pwmRangeConstant) && (requestedDrillSpeed <= curDrillSpeed - pwmRangeConstant)){
     
     if (requestedDrillSpeed > 0) { // Clockwise Rotations
   
@@ -275,8 +288,8 @@ void actuatorRun(){
 
 void moveActuatorRel() {
   int spd;
-  if (requestedActuatorSpeed != curActuatorSpeed){
-
+  //if (requestedActuatorSpeed != curActuatorSpeed){
+  if ((requestedActuatorSpeed >= curActuatorSpeed + pwmRangeConstant) && (requestedActuatorSpeed <= curActuatorSpeed - pwmRangeConstant)){
     if (requestedActuatorSpeed > 0) { // Clockwise Rotations
 
     isActuatorMoving = true;
