@@ -63,8 +63,6 @@ ros::NodeHandle  nh;
 
 void msgCallback (const rover::RedCmd& msg){
 
-  nh.loginfo("Msg received from ROS");
-
   //KILL SWITCH
   if (msg.kill == 1){
     killAll();
@@ -117,8 +115,8 @@ void setup() {
   pinMode(actuatorDirPin, OUTPUT);
   pinMode(actuatorPWMPin, OUTPUT);
 
-  stepper.setEnablePin(13);
-  stepper.enableOutputs();
+  //stepper.setEnablePin(13);
+  //stepper.enableOutputs();
   stepper.setSpeed(stepperSpeed);
 
   delay(2000);
@@ -167,14 +165,12 @@ void loop() {
 void stepperRun(){
  
 
-  if (requestedStepperCmd != stepper.currentPosition()){
     if(!isActuatorMoving){ //Only move Sidesways if actuator isnt moving
 
-      stepper.move(requestedStepperCmd*5);
+      stepper.move(requestedStepperCmd);
       //Serial.println("Stepper Moving");
 
     }
-  }
   
 }
 
