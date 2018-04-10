@@ -1,7 +1,11 @@
 #include <ros.h>
 #include <AccelStepper.h>
 #include <Encoder.h>
-#include <rover/RedCmd.h>
+
+#ifdef ROSSTUFF
+  #include <rover/RedCmd.h>
+#endif
+
 
 
 ///////////////////////////// Defitions ////////////////////////////////////////
@@ -19,10 +23,13 @@
 #define actuatorDirPin 9
 #define actuatorPWMPin 10
 
-//#define stepperEndstopPin 11 Unnecessary
+#define sensorDirPin 11
+#define sensorPWMPin 12
 
 #define stepperSpeed 300
 #define steppperMaxPos 1000
+
+//#define ROSSTUFF UNCOMMENT THIS WHEN READY TO COMPILE FULLY
 
 ///////////////////////////// Variables ////////////////////////////////////////
 
@@ -37,26 +44,31 @@ int oldActuatorPos = -999;
 int curActuatorSpeed = 0;
 
 int curDrillSpeed = 0;
+int curSensorSpeed = 0;
 
 int requestedActuatorPos;
 int requestedActuatorSpeed;
 int requestedStepperCmd;
 int requestedDrillSpeed;
+int requestedSensorSpeed;
 
 ////////////////////////////// ROS CALLBACK ////////////////////////////////////////
-
+#ifdef ROSSTUFF
 // Declare required ROS variables
 ros::NodeHandle  nh;
 
 void msgCallback (const rover::RedCmd& msg){
 
-  nh.loginfo("Msg received from ROS");
+  //nh.loginfo("Msg received from ROS");
 
   //DRILL STUFF
   requestedDrillSpeed = msg.drillSpd;
 
   //Actuator Stuff
   requestedActuatorSpeed = msg.actuatorSpeed;
+
+  //Sensor Stuff
+  requestedSensorSpeed = msg.sensorSpeed;
   
   if (requestedActuatorSpeed == 300){ 
     actuatorState = true; //Absolute Move
@@ -73,7 +85,7 @@ void msgCallback (const rover::RedCmd& msg){
 
 ros::Subscriber<rover::RedCmd> red_sub("red_cmd_data", &msgCallback);
 
-
+#endif
 //////////////////////////////// Motor Setup /////////////////////////////////////////
 
 AccelStepper stepper(AccelStepper::DRIVER, stepperStepPin, stepperDirPin);
@@ -82,14 +94,14 @@ Encoder myEnc(encoderPin1, encoderPin2);
 
 //////////////////////////////// SETUP /////////////////////////////////////////
 void setup() {
-
-  nh.initNode();
-  nh.subscribe(red_sub);
-
-  nh.loginfo("Calling Setup function.");
-
-
-  ////Serial.begin(57600);
+  
+  #ifdef ROSSTUFF
+    nh.initNode();
+    nh.subscribe(red_sub);
+    nh.loginfo("Calling Setup function.");
+  #endif
+  
+  //Serial.begin(57600);
 
   pinMode(drillDirPin, OUTPUT);
   pinMode(drillPWMPin, OUTPUT);
@@ -129,7 +141,7 @@ void loop() {
   long curActuatorPos = myEnc.read();
   if (curActuatorPos != oldActuatorPos) {
     oldActuatorPos = curActuatorPos;
-    ////Serial.println("ActuatorPos: " + curActuatorPos);
+    //Serial.println("ActuatorPos: " + curActuatorPos);
   }
 
   
@@ -137,8 +149,11 @@ void loop() {
   actuatorRun();
   stepperRun();
   stepper.run();
-
-  nh.spinOnce();
+  sensorRun();
+  
+  #ifdef ROSSTUFF
+    nh.spinOnce();
+  #endif
 }
 
 
@@ -153,13 +168,46 @@ void stepperRun(){
     if(!isActuatorMoving){ //Only move Sidesways if actuator isnt moving
 
       stepper.move(requestedStepperCmd*5);
-      ////Serial.println("Stepper Moving");
+      //Serial.println("Stepper Moving");
 
     }
   }
   
 }
 
+
+void sensorRun(){
+
+  int spd;
+  if (requestedSensorSpeed != curSensorSpeed){
+    
+    if (requestedSensorSpeed > 0) { // Clockwise Rotations
+  
+      curSensorSpeed = requestedSensorSpeed;
+      digitalWrite(sensorDirPin, LOW);
+      analogWrite(sensorPWMPin, requestedSensorSpeed);
+      //nh.loginfo("Drill spinning.");
+
+  
+    } else if (requestedSensorSpeed < 0) {
+  
+      curSensorSpeed = requestedSensorSpeed;
+      digitalWrite(sensorDirPin, HIGH);
+      spd = abs(requestedSensorSpeed);
+      analogWrite(sensorPWMPin, requestedSensorSpeed);
+      //nh.loginfo("Drill spinning.");
+  
+    } else {
+  
+      digitalWrite(sensorDirPin, LOW);
+      analogWrite(sensorPWMPin, 0);
+      //nh.loginfo("Drill stopped.");
+    }
+    
+  }
+
+  
+}
 
 void drillRun() {
   int spd;
@@ -171,7 +219,7 @@ void drillRun() {
       curDrillSpeed = requestedDrillSpeed;
       digitalWrite(drillDirPin, LOW);
       analogWrite(drillPWMPin, requestedDrillSpeed);
-      nh.loginfo("Drill spinning.");
+      //nh.loginfo("Drill spinning.");
 
   
     } else if (requestedDrillSpeed < 0) {
@@ -179,16 +227,16 @@ void drillRun() {
       isDrillSpinning = true;
       curDrillSpeed = requestedDrillSpeed;
       digitalWrite(drillDirPin, HIGH);
-      spd = abs(requestedActuatorSpeed);
+      spd = abs(requestedDrillSpeed);
       analogWrite(drillPWMPin, requestedDrillSpeed);
-      nh.loginfo("Drill spinning.");
+      //nh.loginfo("Drill spinning.");
   
     } else {
   
       isDrillSpinning = false;
       digitalWrite(drillDirPin, LOW);
       analogWrite(drillPWMPin, 0);
-      nh.loginfo("Drill stopped.");
+      //nh.loginfo("Drill stopped.");
     }
     
   }
@@ -245,7 +293,7 @@ void moveActuatorRel() {
     digitalWrite(actuatorDirPin, HIGH);
     analogWrite(actuatorPWMPin, requestedActuatorSpeed);
     curActuatorSpeed = requestedActuatorSpeed;
-    nh.loginfo("Actuator moving.");
+    //nh.loginfo("Actuator moving.");
 
     } else if (requestedActuatorSpeed < 0) { // Counter Clockwise Rotations
 
@@ -255,7 +303,7 @@ void moveActuatorRel() {
     spd = abs(requestedActuatorSpeed);
     analogWrite(actuatorPWMPin, spd);
     curActuatorSpeed = requestedActuatorSpeed;
-    nh.loginfo("Actuator moving.");
+    //nh.loginfo("Actuator moving.");
 
     } else { //Not Moving
 
@@ -263,7 +311,7 @@ void moveActuatorRel() {
     digitalWrite(actuatorDirPin, LOW);
     analogWrite(actuatorPWMPin, 0);
     curActuatorSpeed = 0;
-    nh.loginfo("Actuator stopped.");
+    ////nh.loginfo("Actuator stopped.");
 
     }
   }
