@@ -179,7 +179,7 @@ void sensorRun(){
 
   int spd;
   //if (requestedSensorSpeed != curSensorSpeed){
-  if ((requestedSensorSpeed >= curSensorSpeed + pwmRangeConstant) && (requestedSensorSpeed <= curSensorSpeed - pwmRangeConstant)){
+  if ((requestedSensorSpeed >= curSensorSpeed + pwmRangeConstant) || (requestedSensorSpeed <= curSensorSpeed - pwmRangeConstant)){
     if (requestedSensorSpeed > 0) { // Clockwise Rotations
   
       curSensorSpeed = requestedSensorSpeed;
@@ -211,7 +211,7 @@ void sensorRun(){
 void drillRun() {
   int spd;
   //if (requestedDrillSpeed != curDrillSpeed){
-  if ((requestedDrillSpeed >= curDrillSpeed + pwmRangeConstant) && (requestedDrillSpeed <= curDrillSpeed - pwmRangeConstant)){
+  if ((requestedDrillSpeed >= curDrillSpeed + pwmRangeConstant) || (requestedDrillSpeed <= curDrillSpeed - pwmRangeConstant)){
     
     if (requestedDrillSpeed > 0) { // Clockwise Rotations
   
@@ -285,7 +285,7 @@ void actuatorRun(){
 void moveActuatorRel() {
   int spd;
   //if (requestedActuatorSpeed != curActuatorSpeed){
-  if ((requestedActuatorSpeed >= curActuatorSpeed + pwmRangeConstant) && (requestedActuatorSpeed <= curActuatorSpeed - pwmRangeConstant)){
+  if ((requestedActuatorSpeed >= curActuatorSpeed + pwmRangeConstant) || (requestedActuatorSpeed <= curActuatorSpeed - pwmRangeConstant)){
     if (requestedActuatorSpeed > 0) { // Clockwise Rotations
 
     isActuatorMoving = true;
