@@ -29,6 +29,8 @@
 #define stepperSpeed 300
 #define steppperMaxPos 1000
 
+#define cacheActuatorPos 300
+
 //#define ROSSTUFF UNCOMMENT THIS WHEN READY TO COMPILE FULLY
 
 ///////////////////////////// Variables ////////////////////////////////////////
@@ -59,7 +61,12 @@ ros::NodeHandle  nh;
 
 void msgCallback (const rover::RedCmd& msg){
 
-  //nh.loginfo("Msg received from ROS");
+  nh.loginfo("Msg received from ROS");
+
+  //KILL SWITCH
+  if (msg.kill = 1){
+    killAll();
+  }
 
   //DRILL STUFF
   requestedDrillSpeed = msg.drillSpd;
@@ -122,20 +129,6 @@ void setup() {
 
 //////////////////////////////////// Main Software Loop /////////////////////////////////////
 void loop() {
-
-  /*if(isCalibrating){
-    endstopState = digitalRead(stepperEndstopPin);
-    
-    // check if the stepper endstop is reached
-    if (endstopState == HIGH) {
-    // Stop Calibrating, set pos as 0
-      stepper.stop();
-      stepper.setCurrentPosition(0);
-      isCalibrating = false;
-    } else {
-      //Serial.println("Stepper Calibrating");
-    }
-  }*/
 
   //Update Encoder position as the current actuator pos
   long curActuatorPos = myEnc.read();
@@ -326,9 +319,8 @@ void calibrateSystem() {
   moveActuatorRel(); //Full Speed up
   delay(5000); //Make sure actuator reaches top endstop
   curActuatorPos = 0;
-
+  
   stepper.setCurrentPosition(0);
-  //Main loop will let motor run till the sensor is reached
 
 
 }
