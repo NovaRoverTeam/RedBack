@@ -31,7 +31,7 @@
 
 #define pwmRangeConstant 20
 
-//#define ROSSTUFF
+//#define ROSSTUFF //UNCOMMENT THIS LINE WHEN ROS IS REQUIRED FOR COMPILE
 
 ///////////////////////////// Variables ////////////////////////////////////////
 
