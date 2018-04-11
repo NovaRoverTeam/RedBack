@@ -15,14 +15,14 @@
 #define stepperDirPin 5
 #define stepperStepPin 6
 
-#define sensorDirPin 7
-#define sensorPWMPin 8
+#define sensorDirPin 11
+#define sensorPWMPin 12
 
 #define actuatorDirPin 9
 #define actuatorPWMPin 10
 
-#define drillDirPin 11
-#define drillPWMPin 12
+#define drillDirPin 7
+#define drillPWMPin 8
 
 #define stepperSpeed 300
 #define steppperMaxPos 1000
@@ -32,7 +32,7 @@
 #define pwmRangeConstant 20
 #define stepperWorkaround 10
 
-//#define ROSSTUFF //UNCOMMENT THIS LINE WHEN ROS IS REQUIRED FOR COMPILE
+#define ROSSTUFF //UNCOMMENT THIS LINE WHEN ROS IS REQUIRED FOR COMPILE
 
 ///////////////////////////// Variables ////////////////////////////////////////
 
@@ -113,12 +113,14 @@ void setup() {
 
   pinMode(drillDirPin, OUTPUT);
   pinMode(drillPWMPin, OUTPUT);
+  pinMode(sensorDirPin, OUTPUT);
+  pinMode(sensorPWMPin, OUTPUT);
   pinMode(actuatorDirPin, OUTPUT);
   pinMode(actuatorPWMPin, OUTPUT);
 
   //stepper.setEnablePin(13);
   //stepper.enableOutputs();
-  stepper.setSpeed(stepperSpeed);
+  stepper.setMaxSpeed(stepperSpeed);
 
   delay(2000);
 
@@ -132,7 +134,7 @@ void setup() {
 void loop() {
   
 
-  //Update Encoder position as the current actuator pos
+  /*//Update Encoder position as the current actuator pos
   long curActuatorPos = myEnc.read();
   if (curActuatorPos != oldActuatorPos) {
     oldActuatorPos = curActuatorPos;
@@ -140,7 +142,7 @@ void loop() {
       nh.loginfo("Drill spinning.");
     #endif
     //Serial.println("ActuatorPos: " + curActuatorPos);
-  }
+  }*/
 
   
   drillRun();
@@ -149,11 +151,11 @@ void loop() {
   sensorRun();
 
 
-  for(int i = 0; i < stepperWorkaround; i++){
+  //for(int i = 0; i < stepperWorkaround; i++){
     
-    stepper.runSpeed();
+    stepper.run();
     
-  }
+  //}
   
   
 
@@ -171,12 +173,12 @@ void loop() {
 void stepperRun(){
  
 
-    if(!isActuatorMoving){ //Only move Sidesways if actuator isnt moving
+    //if(!isActuatorMoving){ //Only move Sidesways if actuator isnt moving
 
-      stepper.move(requestedStepperCmd);
+      stepper.move(requestedStepperCmd*50);
       //Serial.println("Stepper Moving");
 
-    }
+    //}
   
 }
 
@@ -199,7 +201,7 @@ void sensorRun(){
       curSensorSpeed = requestedSensorSpeed;
       digitalWrite(sensorDirPin, HIGH);
       spd = abs(requestedSensorSpeed);
-      analogWrite(sensorPWMPin, requestedSensorSpeed);
+      analogWrite(sensorPWMPin, spd);
       //nh.loginfo("Sensor spinning.");
   
     } else {
@@ -298,7 +300,6 @@ void moveActuatorRel() {
     curActuatorSpeed = requestedActuatorSpeed;
     digitalWrite(actuatorDirPin, HIGH);
     analogWrite(actuatorPWMPin, requestedActuatorSpeed);
-    curActuatorSpeed = requestedActuatorSpeed;
     //nh.loginfo("Actuator moving.");
 
     } else if (requestedActuatorSpeed < 0) { // Counter Clockwise Rotations
@@ -308,7 +309,6 @@ void moveActuatorRel() {
     digitalWrite(actuatorDirPin, LOW);
     spd = abs(requestedActuatorSpeed);
     analogWrite(actuatorPWMPin, spd);
-    curActuatorSpeed = requestedActuatorSpeed;
     //nh.loginfo("Actuator moving.");
 
     } else { //Not Moving
