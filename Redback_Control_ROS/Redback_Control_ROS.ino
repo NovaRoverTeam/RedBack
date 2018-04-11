@@ -15,14 +15,14 @@
 #define stepperDirPin 5
 #define stepperStepPin 6
 
-#define drillDirPin 7
-#define drillPWMPin 8
+#define sensorDirPin 7
+#define sensorPWMPin 8
 
 #define actuatorDirPin 9
 #define actuatorPWMPin 10
 
-#define sensorDirPin 11
-#define sensorPWMPin 12
+#define drillDirPin 11
+#define drillPWMPin 12
 
 #define stepperSpeed 300
 #define steppperMaxPos 1000
@@ -30,6 +30,7 @@
 #define cacheActuatorPos 300
 
 #define pwmRangeConstant 20
+#define stepperWorkaround 10
 
 //#define ROSSTUFF //UNCOMMENT THIS LINE WHEN ROS IS REQUIRED FOR COMPILE
 
@@ -130,8 +131,7 @@ void setup() {
 //////////////////////////////////// Main Software Loop /////////////////////////////////////
 void loop() {
   
-  stepper.runSpeed();
-  
+
   //Update Encoder position as the current actuator pos
   long curActuatorPos = myEnc.read();
   if (curActuatorPos != oldActuatorPos) {
@@ -147,8 +147,14 @@ void loop() {
   actuatorRun();
   stepperRun();
   sensorRun();
+
+
+  for(int i = 0; i < stepperWorkaround; i++){
+    
+    stepper.runSpeed();
+    
+  }
   
-  stepper.runSpeed();
   
 
   
@@ -329,6 +335,7 @@ void calibrateSystem() {
   
   stepper.setCurrentPosition(0);
 
+  
 
 }
 
