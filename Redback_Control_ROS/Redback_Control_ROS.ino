@@ -26,13 +26,14 @@
 
 #define stepperSpeed 300
 #define steppperMaxPos 1000
+#define stepperAccel 100
 
 #define cacheActuatorPos 300
 
 #define pwmRangeConstant 20
 #define stepperWorkaround 10
 
-#define ROSSTUFF //UNCOMMENT THIS LINE WHEN ROS IS REQUIRED FOR COMPILE
+//#define ROSSTUFF //UNCOMMENT THIS LINE WHEN ROS IS REQUIRED FOR COMPILE
 
 ///////////////////////////// Variables ////////////////////////////////////////
 
@@ -88,6 +89,7 @@ void msgCallback (const rover::RedCmd& msg){
 
   //STEPPER STUFF
   requestedStepperCmd = msg.stepperPos;
+  stepperRun();
 
 }
 
@@ -121,10 +123,14 @@ void setup() {
   //stepper.setEnablePin(13);
   //stepper.enableOutputs();
   stepper.setMaxSpeed(stepperSpeed);
+  stepper.setSpeed(500);
+  stepper.setAcceleration(stepperAccel);
 
   delay(2000);
 
   calibrateSystem();
+
+  stepper.moveTo(200);
 
 
 }
@@ -147,7 +153,6 @@ void loop() {
   
   drillRun();
   actuatorRun();
-  stepperRun();
   sensorRun();
 
 
@@ -173,12 +178,12 @@ void loop() {
 void stepperRun(){
  
 
-    //if(!isActuatorMoving){ //Only move Sidesways if actuator isnt moving
+    if(!isActuatorMoving){ //Only move Sidesways if actuator isnt moving
 
       stepper.move(requestedStepperCmd*50);
       //Serial.println("Stepper Moving");
 
-    //}
+    }
   
 }
 
@@ -329,9 +334,9 @@ void calibrateSystem() {
   isCalibrating = true;
 
   //requestedActuatorSpeed = 100; // calibration to set to top
-  moveActuatorRel(); //Full Speed up
-  delay(5000); //Make sure actuator reaches top endstop
-  curActuatorPos = 0;
+  //moveActuatorRel(); //Full Speed up
+  //delay(5000); //Make sure actuator reaches top endstop
+  //curActuatorPos = 0;
   
   stepper.setCurrentPosition(0);
 
