@@ -6,7 +6,7 @@
 
 
 
-///////////////////////////// Defitions ////////////////////////////////////////
+///////////////////////////// Definitions ////////////////////////////////////////
 //DOUBLE CHECK PINS
 #define encoderPin1 2
 #define encoderPin2 3
@@ -33,7 +33,7 @@
 #define pwmRangeConstant 20
 #define stepperWorkaround 10
 
-//#define ROSSTUFF //UNCOMMENT THIS LINE WHEN ROS IS REQUIRED FOR COMPILE
+#define ROSSTUFF //UNCOMMENT THIS LINE WHEN ROS IS REQUIRED FOR COMPILE
 
 ///////////////////////////// Variables ////////////////////////////////////////
 
