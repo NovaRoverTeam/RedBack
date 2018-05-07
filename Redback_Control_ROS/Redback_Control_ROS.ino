@@ -123,7 +123,7 @@ void setup() {
   //stepper.setEnablePin(13);
   //stepper.enableOutputs();
   stepper.setMaxSpeed(stepperSpeed);
-  stepper.setSpeed(500);
+  stepper.setSpeed(stepperSpeed);
   stepper.setAcceleration(stepperAccel);
 
   delay(2000);
@@ -154,13 +154,7 @@ void loop() {
   drillRun();
   actuatorRun();
   sensorRun();
-
-
-  //for(int i = 0; i < stepperWorkaround; i++){
-    
-    stepper.run();
-    
-  //}
+  stepper.run();
   
   
 
