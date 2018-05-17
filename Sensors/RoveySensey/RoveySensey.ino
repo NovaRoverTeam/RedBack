@@ -1,12 +1,10 @@
 #include <SparkFunBME280.h>
 #include <SparkFunCCS811.h>
+#include <SparkFunTSL2561.h>
+#include <SoftwareSerial.h>
 #include <SPI.h>
 #include <SD.h>
-#include <SparkFunTSL2561.h>
 #include <Wire.h>
-
-
-
 
 #define CCS811_ADDR 0x5B //Default I2C Address CCS811 Sensor
 
@@ -20,6 +18,9 @@ const int chipSelect = 8; //SD Shield Enable
 int timecounter = 0;
 unsigned char time = 2;
 
+//Hydra 
+bool gettingData = false;
+
 //Light Sensor
 boolean gain = 0;     // Gain setting, 0 = X1, 1 = X16;
 unsigned int ms;  // Integration ("shutter") time in milliseconds
@@ -28,9 +29,8 @@ unsigned int ms;  // Integration ("shutter") time in milliseconds
 void setup() {
 
   Serial.begin(115200);
-
   
-  //This begins the CCS811 sensor and prints error status of .begin()
+  //This begins the CCS811 sensor
   myCCS811.begin();
 
   //For I2C, enable the following and disable the SPI section
@@ -64,13 +64,14 @@ void setup() {
     return;
   }
 
+  printHeader();
+
 }
 
 void loop() {
   // put your main code here, to run repeatedly:
 
     formatData();
-    
     delay(2000);
 }
 
@@ -145,7 +146,7 @@ void formatData(){
 void printHeader(){
   Serial.println("Co2,TVOC,TempC,Pressure,Altitude,Humidity,Lux");
   
-  File dataFile = SD.open("datalog.txt", FILE_WRITE);
+  File dataFile = SD.open("datalogSensors.txt", FILE_WRITE);
 
   if (dataFile) {
     dataFile.println("Co2,TVOC,TempC,Pressure,Altitude,Humidity,Lux");
@@ -162,13 +163,5 @@ void writeFile(){
     dataFile.println(allSensorData);
     dataFile.close();
   }
-}
-
-
-void pollHydra(){
-
-
-
-  
 }
 
