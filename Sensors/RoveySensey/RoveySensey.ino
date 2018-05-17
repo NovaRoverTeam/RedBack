@@ -82,7 +82,6 @@ void formatData(){
   allSensorData = "";
 
   allSensorData += String(timecounter)+",";
-  Serial.println(myCCS811.getCO2());  
   if (myCCS811.dataAvailable())
   {
     myCCS811.readAlgorithmResults();
